@@ -1,0 +1,12 @@
+<resources>
+
+    <string name="app_name">DashClock SMS Viewer</string>
+    <string name="extension_title">SMS Viewer</string>
+    <string name="extension_description">View text of received SMS</string>
+    <string name="sms_body_template">From: %1$s</string>
+    <plurals name="sms_title_template">
+        <item quantity="one">%1$s unread conversation</item>
+        <item quantity="other">%1$s unread conversations</item>
+    </plurals>
+
+</resources>

@@ -216,19 +216,7 @@ public class SMSViewer extends DashClockExtension {
     private String getMessageText(){
     	Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
     	cursor.moveToFirst();
-    	
-    	String msgData = "";
-
-    	do{
-//    	   String msgData = "";
-    	   for(int idx=12;idx<cursor.getColumnCount();idx++)
-    	   {
-    	       msgData += " " + cursor.getColumnName(idx) + ":" + cursor.getString(idx);
-    	   }
-    	}while(cursor.moveToNext());
-    	//Trim data of message to only the text in it
-    	msgData = msgData.substring(msgData.indexOf("body:") + 5, msgData.indexOf("service"));
-    	
-    	return msgData;
+    	//12 is where message text is stored
+    	return cursor.getString(12);
     }
 }

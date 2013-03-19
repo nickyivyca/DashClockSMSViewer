@@ -21,6 +21,7 @@ import android.text.TextUtils;
  */
 public class SMSViewer extends DashClockExtension {
 //    private static final String TAG = LogUtils.makeLogTag(SmsExtension.class);
+	private long messageID = 0; 
 
     @Override
     protected void onInitialize(boolean isReconnect) {
@@ -44,6 +45,7 @@ public class SMSViewer extends DashClockExtension {
 
             // Get display name. SMS's are easy; MMS's not so much.
             long id = cursor.getLong(MmsSmsQuery._ID);
+            messageID = id;
             long contactId = cursor.getLong(MmsSmsQuery.PERSON);
             String address = cursor.getString(MmsSmsQuery.ADDRESS);
             threadId = cursor.getLong(MmsSmsQuery.THREAD_ID);
@@ -105,7 +107,9 @@ public class SMSViewer extends DashClockExtension {
         		   unreadConversations);
         }
         if(unreadConversations == 1)
-        	body = getMessageText();
+        	body = getMessageText(messageID);
+        if (body == null)
+        	body ="New Message";
 
         publishUpdate(new ExtensionData()
                 .visible(unreadConversations > 0)
@@ -213,10 +217,20 @@ public class SMSViewer extends DashClockExtension {
         int DISPLAY_NAME = 0;
     }
     
-    private String getMessageText(){
-    	Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
-    	cursor.moveToFirst();
-    	//12 is where message text is stored
-    	return cursor.getString(12);
+    public String getMessageText(long messageId){
+    	//BIG thanks to ShortFuse!
+        String[] selectColumns = new String[] { "body" };
+        Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), 
+            selectColumns, "_id=?", new String[] { String.valueOf(messageId) }, null);
+        if (cursor == null)
+            return null; //handle this outside with default text        
+        if (!cursor.moveToFirst())
+        {
+            cursor.close();
+            return null;
+        }
+        String body = cursor.getString(0); //we only passed one column so it'll always be 0;
+        cursor.close();
+        return body;
     }
 }

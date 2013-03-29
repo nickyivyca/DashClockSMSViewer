@@ -15,13 +15,14 @@ public final class R {
         public static final int ic_launcher=0x7f020001;
     }
     public static final class plurals {
-        public static final int sms_title_template=0x7f040000;
+        public static final int sms_title_template=0x7f030000;
     }
     public static final class string {
-        public static final int app_name=0x7f030000;
-        public static final int extension_description=0x7f030002;
-        public static final int extension_title=0x7f030001;
-        public static final int sms_body_template=0x7f030003;
+        public static final int app_name=0x7f040000;
+        public static final int extension_description=0x7f040002;
+        public static final int extension_title=0x7f040001;
+        public static final int no_body_sub=0x7f040004;
+        public static final int sms_body_template=0x7f040003;
     }
     public static final class style {
         /** 

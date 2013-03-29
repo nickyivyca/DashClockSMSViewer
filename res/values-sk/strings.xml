@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DashClock SMS Viewer</string>
+    <string name="extension_title">SMS Viewer</string>
+    <string name="extension_description">Zobrazí text prijatých SMS</string>
+    <string name="sms_body_template">Od: %1$s</string>
+    <string name="no_body_sub">Nová správa</string>
+</resources>

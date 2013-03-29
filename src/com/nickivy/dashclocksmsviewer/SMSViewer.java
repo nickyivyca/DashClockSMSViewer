@@ -109,7 +109,7 @@ public class SMSViewer extends DashClockExtension {
         if(unreadConversations == 1)
         	body = getMessageText(messageID);
         if (body == null)
-        	body ="New Message";
+        	body = getResources().getString(R.string.no_body_sub);
 
         publishUpdate(new ExtensionData()
                 .visible(unreadConversations > 0)

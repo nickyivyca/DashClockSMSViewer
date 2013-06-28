@@ -107,7 +107,8 @@ public class SMSViewer extends DashClockExtension {
         		   unreadConversations);
         }
         if(unreadConversations == 1)
-        	body = getMessageText(messageID);
+//        	body = getMessageText(messageID);
+        	body = getMessageText();
         if (body == null)
         	body = getResources().getString(R.string.no_body_sub);
 
@@ -232,5 +233,29 @@ public class SMSViewer extends DashClockExtension {
         String body = cursor.getString(0); //we only passed one column so it'll always be 0;
         cursor.close();
         return body;
+    }
+    
+    //Testing for grabbing text when more than one unread message
+    //
+    public String getMessageText(){
+    	Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), new String[] { "body" } , "read = 0", null, null);
+    	if (cursor == null)
+    		return null;
+        if (!cursor.moveToFirst())
+        {
+            cursor.close();
+            return null;
+        }
+        cursor.moveToLast();
+        String body = "";
+        int numproc = 0;
+        while(numproc != cursor.getCount()){
+        	body = body + cursor.getString(cursor.getColumnIndexOrThrow("body")) + "\n";
+        	numproc++;
+        	cursor.moveToPrevious();
+        }
+        cursor.close();
+    	
+    	return body;
     }
 }

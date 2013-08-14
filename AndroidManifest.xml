@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.nickivy.dashclocksmsviewer"
     android:versionCode="1"
-    android:versionName="0.4" >
+    android:versionName="0.5" >
     
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
@@ -12,7 +12,7 @@
     
     <application android:label="@string/app_name"
     android:icon="@drawable/ic_icon"
-    android:theme="@android:style/Theme.Holo">
+    android:theme="@android:style/Theme.Holo.Light">
 
     <service android:name=".SMSViewer"
         android:icon="@drawable/ic_icon"
@@ -24,7 +24,38 @@
         <meta-data android:name="protocolVersion" android:value="1" />
         <meta-data android:name="description"
             android:value="@string/extension_description" />
+        <meta-data android:name="settingsActivity"
+            android:value=".SMSViewerPrefs"/>
     </service>
+    <service android:name=".Panel2"
+        android:icon="@drawable/ic_icon"
+        android:label="@string/extension2_title"
+        android:permission="com.google.android.apps.dashclock.permission.READ_EXTENSION_DATA">
+        <intent-filter>
+            <action android:name="com.google.android.apps.dashclock.Extension" />
+        </intent-filter>
+        <meta-data android:name="protocolVersion" android:value="1" />
+        <meta-data android:name="description"
+            android:value="@string/extrapanel_description" />
+        <meta-data android:name="settingsActivity"
+            android:value=".SMSViewerPrefs"/>
+    </service>
+    <service android:name=".Panel3"
+        android:icon="@drawable/ic_icon"
+        android:label="@string/extension3_title"
+        android:permission="com.google.android.apps.dashclock.permission.READ_EXTENSION_DATA">
+        <intent-filter>
+            <action android:name="com.google.android.apps.dashclock.Extension" />
+        </intent-filter>
+        <meta-data android:name="protocolVersion" android:value="1" />
+        <meta-data android:name="description"
+            android:value="@string/extrapanel_description" />
+        <meta-data android:name="settingsActivity"
+            android:value=".SMSViewerPrefs"/>
+    </service>
+     <activity android:name=".SMSViewerPrefs"
+     android:label="@string/title_settings"
+     android:exported="true" />
 
 </application>
 

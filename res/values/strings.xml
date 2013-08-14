@@ -2,9 +2,19 @@
 
     <string name="app_name">DashClock SMS Viewer</string>
     <string name="extension_title">SMS Viewer</string>
+    <string name="extension2_title">SMS Viewer Panel 2</string>
+    <string name="extension3_title">SMS Viewer Panel 3</string>
     <string name="extension_description">View text of received SMS</string>
+    <string name="extrapanel_description">View additional message detail - see settings</string>
     <string name="sms_body_template">From: %1$s</string>
     <string name="no_body_sub">New Message</string>
+    <string name="pref_name_title">Title</string>
+    <string name="pref_name_default">Name</string>
+    <string name="pref_switch">Switch sender/contents</string>
+    <string name="pref_switch_summ">Put message text in larger top area of panel and sender in smaller lower area</string>
+    <string name="pref_multi">Take advantage of multiple extension panels</string>
+    <string name="pref_multi_summ">YOU MUST ADD THE EXTRA PANELS IN DASHCLOCK OR ELSE MESSAGES WILL BE HIDDEN! Display each conversation in its own panel instead of collapsing to \'unread conversations.\' (to a max of 3 conversations)</string>
+    <string name="title_settings">Settings</string>
     <plurals name="sms_title_template">
         <item quantity="one">%1$s unread conversation</item>
         <item quantity="other">%1$s unread conversations</item>

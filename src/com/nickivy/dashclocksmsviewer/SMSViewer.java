@@ -1,6 +1,9 @@
 package com.nickivy.dashclocksmsviewer;
 
+import java.util.ArrayList;
+
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 
 import com.google.android.apps.dashclock.api.DashClockExtension;
@@ -9,6 +12,7 @@ import com.google.android.apps.dashclock.api.ExtensionData;
 import com.nickivy.dashclocksmsviewer.R;
 
 import android.database.Cursor;
+import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 
@@ -22,6 +26,31 @@ import android.text.TextUtils;
 public class SMSViewer extends DashClockExtension {
 //    private static final String TAG = LogUtils.makeLogTag(SmsExtension.class);
 	private long messageID = 0; 
+	
+	public static final String PREF_SWITCH = "pref_switch";
+	public static final String PREF_MULTI = "pref_multi";
+	
+	//Public variables for Panels 2, 3 to read from
+	
+	public static String panel2_title = ""; //title and contents refer to default where
+	public static String panel3_title = ""; //sender is on top and contents on bottom
+	
+	public static String panel2_contents = "";
+	public static String panel3_contents = "";
+	
+	public static long panel2_threadId = 0;
+	public static long panel3_threadId = 0;
+	
+	public static String panel2_address = "";
+	public static String panel3_address = "";
+	
+	public static boolean panel2_visible = false;
+	public static boolean panel3_visible = false;
+	
+	public static int[] nummsg = new int[3];
+	
+	public static int unreadConversations = 0;
+	
 
     @Override
     protected void onInitialize(boolean isReconnect) {
@@ -31,14 +60,22 @@ public class SMSViewer extends DashClockExtension {
                     TelephonyProviderConstants.MmsSms.CONTENT_URI.toString(),
             });
         }
+        setUpdateWhenScreenOn(true);
     }
 
     @Override
     protected void onUpdateData(int reason) {
-        int unreadConversations = 0;
+    	unreadConversations = 0;
         StringBuilder names = new StringBuilder();
+        ArrayList<String> namelist = new ArrayList<String>();
+        ArrayList<String> addrlist = new ArrayList<String>();
+        ArrayList<Long> idlist = new ArrayList<Long>();
         Cursor cursor = openMmsSmsCursor();
         long threadId = 0;
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean switcher = sp.getBoolean(PREF_SWITCH, false);
+        boolean multi = sp.getBoolean(PREF_MULTI, false);
+        int status = 0;
 
         while (cursor.moveToNext()) {
             ++unreadConversations;
@@ -49,6 +86,8 @@ public class SMSViewer extends DashClockExtension {
             long contactId = cursor.getLong(MmsSmsQuery.PERSON);
             String address = cursor.getString(MmsSmsQuery.ADDRESS);
             threadId = cursor.getLong(MmsSmsQuery.THREAD_ID);
+            idlist.add(threadId);
+            
 
             if (contactId == 0 && TextUtils.isEmpty(address) && id != 0) {
                 // Try MMS addr query
@@ -61,6 +100,7 @@ public class SMSViewer extends DashClockExtension {
             }
 
             String displayName = address;
+            addrlist.add(address);
 
             if (contactId > 0) {
                 Cursor contactCursor = openContactsCursorById(contactId);
@@ -86,6 +126,7 @@ public class SMSViewer extends DashClockExtension {
                 names.append(", ");
             }
             names.append(displayName);
+            namelist.add(displayName);
         }
         cursor.close();
 
@@ -101,23 +142,56 @@ public class SMSViewer extends DashClockExtension {
         
         //Display number if more than one convo, text of latest message if just one
         String body = "";
-        if (unreadConversations > 1){
-        	body = getResources().getQuantityString(
-        		   R.plurals.sms_title_template, unreadConversations,
-        		   unreadConversations);
+        String title = "";
+        if (!multi){
+            if (unreadConversations > 1){
+            	body = getResources().getQuantityString(
+            		   R.plurals.sms_title_template, unreadConversations,
+            		   unreadConversations);
+            }
+            if(unreadConversations == 1)
+            	body = getMessageText(addrlist.get(0),0);
+            title = names.toString();
+            if (body == null)
+            	body = getResources().getString(R.string.no_body_sub);
+            status = unreadConversations;
+        }else{
+            if (unreadConversations > 3){
+            	body = getResources().getQuantityString(
+            		   R.plurals.sms_title_template, unreadConversations,
+            		   unreadConversations);
+            	title = names.toString();
+            }
+            if(unreadConversations > 0 && unreadConversations < 4){
+            	title = namelist.get(0);
+            	body = getMessageText(addrlist.get(0),0);
+            	panel2_visible = false;
+            	panel3_visible = false;
+        		status = nummsg[0];
+            	if(unreadConversations > 1 && multi){
+            		panel2_title = namelist.get(1);
+            		panel2_contents = getMessageText(addrlist.get(1),1);
+            		panel2_threadId = idlist.get(1);
+            		panel2_visible = true;
+            		if (unreadConversations > 2){
+                		panel3_title = namelist.get(2);
+                		panel3_contents = getMessageText(addrlist.get(2),2);
+                		panel3_threadId = idlist.get(2);
+            			panel3_visible = true;
+            		}
+            	}
+            }
+            if (body == null)
+            	body = getResources().getString(R.string.no_body_sub);
+        	
         }
-        if(unreadConversations == 1)
-//        	body = getMessageText(messageID);
-        	body = getMessageText();
-        if (body == null)
-        	body = getResources().getString(R.string.no_body_sub);
 
         publishUpdate(new ExtensionData()
                 .visible(unreadConversations > 0)
                 .icon(R.drawable.ic_icon)
-                .status(Integer.toString(unreadConversations))
-                .expandedTitle(names.toString())
-                .expandedBody(body)
+                .status(Integer.toString(status))
+                .expandedTitle(switcher? body : title)
+                .expandedBody(switcher? title : body)
                 .clickIntent(clickIntent));
     	   
     }
@@ -239,8 +313,9 @@ public class SMSViewer extends DashClockExtension {
     //
     public String getMessageText(){
     	Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), new String[] { "body" } , "read = 0", null, null);
-    	if (cursor == null)
+    	if (cursor == null){
     		return null;
+    	}
         if (!cursor.moveToFirst())
         {
             cursor.close();
@@ -250,9 +325,43 @@ public class SMSViewer extends DashClockExtension {
         String body = "";
         int numproc = 0;
         while(numproc != cursor.getCount()){
-        	body = body + cursor.getString(cursor.getColumnIndexOrThrow("body")) + "\n";
+        	if (numproc == 0)
+        		body = body + cursor.getString(cursor.getColumnIndexOrThrow("body"));
+        	else
+            	body = body + "\n" + cursor.getString(cursor.getColumnIndexOrThrow("body"));
         	numproc++;
         	cursor.moveToPrevious();
+        }
+        cursor.close();
+    	
+    	return body;
+    }
+
+    //For when multiple contacts exist and you want to get messages from only one
+    public String getMessageText(String addr, int num){
+    	Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), new String[] { "address","body", } , "read = 0", null, null);
+    	if (cursor == null){
+    		return null;
+    	}
+        if (!cursor.moveToFirst())
+        {
+            cursor.close();
+            return null;
+        }
+        cursor.moveToLast();
+        String body = "";
+        int numproc = 0;
+        nummsg[num] = 0;
+        while(numproc != cursor.getCount()){
+        	if(cursor.getString(cursor.getColumnIndexOrThrow("address")).equals(addr)){
+        		if (body.equals(""))
+        			body = body + cursor.getString(cursor.getColumnIndexOrThrow("body"));
+        		else
+        			body = body + "\n" + cursor.getString(cursor.getColumnIndexOrThrow("body"));
+            	nummsg[num]++;
+        	}
+    		numproc++;
+    		cursor.moveToPrevious();
         }
         cursor.close();
     	

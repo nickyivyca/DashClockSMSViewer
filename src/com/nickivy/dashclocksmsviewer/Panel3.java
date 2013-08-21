@@ -41,8 +41,8 @@ public class Panel3 extends DashClockExtension {
                 .visible(SMSViewer.panel3_visible)
                 .icon(R.drawable.ic_icon)
                 .status(Integer.toString(SMSViewer.nummsg[2]))
-                .expandedTitle(switcher?  SMSViewer.panel3_contents : SMSViewer.panel2_title)
-                .expandedBody(switcher? SMSViewer.panel3_title : SMSViewer.panel2_contents)
+                .expandedTitle(switcher?  SMSViewer.panel3_contents : SMSViewer.panel3_title)
+                .expandedBody(switcher? SMSViewer.panel3_title : SMSViewer.panel3_contents)
                 .clickIntent(clickIntent));
     	   
     }

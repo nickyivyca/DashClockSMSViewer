@@ -8,6 +8,7 @@ import com.google.android.apps.dashclock.api.ExtensionData;
 
 import com.nickivy.dashclocksmsviewer.R;
 
+import android.net.Uri;
 import android.preference.PreferenceManager;
 
 public class Panel2 extends DashClockExtension {
@@ -27,15 +28,7 @@ public class Panel2 extends DashClockExtension {
     protected void onUpdateData(int reason) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
     	boolean switcher = sp.getBoolean(SMSViewer.PREF_SWITCH, false);
-        Intent clickIntent;
-        if (SMSViewer.panel2_threadId > 0) {
-            clickIntent = new Intent(Intent.ACTION_VIEW,
-                    TelephonyProviderConstants.MmsSms.CONTENT_CONVERSATIONS_URI.buildUpon()
-                            .appendPath(Long.toString(SMSViewer.panel2_threadId)).build());
-        } else {
-            clickIntent = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN,
-                    Intent.CATEGORY_APP_MESSAGING);
-        }
+        Intent clickIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("smsto:" + SMSViewer.panel2_address));
 
         publishUpdate(new ExtensionData()
                 .visible(SMSViewer.panel2_visible)

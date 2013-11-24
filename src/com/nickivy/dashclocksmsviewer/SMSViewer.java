@@ -2,8 +2,10 @@ package com.nickivy.dashclocksmsviewer;
 
 import java.util.ArrayList;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import com.google.android.apps.dashclock.api.DashClockExtension;
@@ -15,6 +17,7 @@ import android.database.Cursor;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 /**
  * This code is based off of the base SMS extension that comes with DashClock.
@@ -29,6 +32,7 @@ public class SMSViewer extends DashClockExtension {
 	
 	public static final String PREF_SWITCH = "pref_switch";
 	public static final String PREF_MULTI = "pref_multi";
+	public static final String PREF_HANGOUTS = "pref_hangouts";
 	
 	//Public variables for Panels 2, 3 to read from
 	
@@ -38,8 +42,8 @@ public class SMSViewer extends DashClockExtension {
 	public static String panel2_contents = "";
 	public static String panel3_contents = "";
 	
-	public static long panel2_threadId = 0;
-	public static long panel3_threadId = 0;
+//	public static long panel2_threadId = 0;
+//	public static long panel3_threadId = 0;
 	
 	public static String panel2_address = "";
 	public static String panel3_address = "";
@@ -71,10 +75,11 @@ public class SMSViewer extends DashClockExtension {
         ArrayList<String> addrlist = new ArrayList<String>();
         ArrayList<Long> idlist = new ArrayList<Long>();
         Cursor cursor = openMmsSmsCursor();
-        long threadId = 0;
+//        long threadId = 0;
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         boolean switcher = sp.getBoolean(PREF_SWITCH, false);
         boolean multi = sp.getBoolean(PREF_MULTI, false);
+        boolean hangouts = sp.getBoolean(PREF_HANGOUTS, false);
         int status = 0;
 
         while (cursor.moveToNext()) {
@@ -85,8 +90,6 @@ public class SMSViewer extends DashClockExtension {
             messageID = id;
             long contactId = cursor.getLong(MmsSmsQuery.PERSON);
             String address = cursor.getString(MmsSmsQuery.ADDRESS);
-            threadId = cursor.getLong(MmsSmsQuery.THREAD_ID);
-            idlist.add(threadId);
             
 
             if (contactId == 0 && TextUtils.isEmpty(address) && id != 0) {
@@ -130,14 +133,33 @@ public class SMSViewer extends DashClockExtension {
         }
         cursor.close();
 
-        Intent clickIntent;
-        if (unreadConversations == 1 && threadId > 0) {
-            clickIntent = new Intent(Intent.ACTION_VIEW,
-                    TelephonyProviderConstants.MmsSms.CONTENT_CONVERSATIONS_URI.buildUpon()
-                            .appendPath(Long.toString(threadId)).build());
+        /*Intent for Panel 1
+         * If multipanel enabled:
+         *  - if 1-3 convos active lead to convo 1
+         *  - if > 3 convos active lead to app
+         * If disabled:
+         *  - if 1 convo active lead to it
+         *  - if more than that lead to messaging app
+         */
+        Intent clickIntent = null;
+        if (unreadConversations > 0 && unreadConversations < 4 && ((!multi && unreadConversations == 1) || multi )) {
+        	clickIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("smsto:" + addrlist.get(0)));
         } else {
+        	if (hangouts){
+        		PackageManager pm = getPackageManager();
+            	try{
+            		clickIntent = pm.getLaunchIntentForPackage("com.google.android.talk");
+            		if (clickIntent == null)
+            			throw new PackageManager.NameNotFoundException();
+            		else
+            			clickIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+            	}catch(PackageManager.NameNotFoundException e){
+            		Toast.makeText(getApplicationContext(), getResources().getString(R.string.install_hangouts_plz), Toast.LENGTH_SHORT).show();
+            	}
+        	}else{
             clickIntent = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN,
                     Intent.CATEGORY_APP_MESSAGING);
+        	}
         }
         
         //Display number if more than one convo, text of latest message if just one
@@ -155,12 +177,17 @@ public class SMSViewer extends DashClockExtension {
             if (body == null)
             	body = getResources().getString(R.string.no_body_sub);
             status = unreadConversations;
+        	panel2_visible = false;
+        	panel3_visible = false;
         }else{
             if (unreadConversations > 3){
             	body = getResources().getQuantityString(
             		   R.plurals.sms_title_template, unreadConversations,
             		   unreadConversations);
             	title = names.toString();
+            	status = unreadConversations;
+            	panel2_visible = false;
+            	panel3_visible = false;
             }
             if(unreadConversations > 0 && unreadConversations < 4){
             	title = namelist.get(0);
@@ -171,12 +198,12 @@ public class SMSViewer extends DashClockExtension {
             	if(unreadConversations > 1 && multi){
             		panel2_title = namelist.get(1);
             		panel2_contents = getMessageText(addrlist.get(1),1);
-            		panel2_threadId = idlist.get(1);
+            		panel2_address = addrlist.get(1);
             		panel2_visible = true;
             		if (unreadConversations > 2){
                 		panel3_title = namelist.get(2);
                 		panel3_contents = getMessageText(addrlist.get(2),2);
-                		panel3_threadId = idlist.get(2);
+                		panel3_address = addrlist.get(2);
             			panel3_visible = true;
             		}
             	}

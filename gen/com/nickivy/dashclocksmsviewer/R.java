@@ -24,7 +24,10 @@ public final class R {
         public static final int extension_description=0x7f050004;
         public static final int extension_title=0x7f050001;
         public static final int extrapanel_description=0x7f050005;
+        public static final int install_hangouts_plz=0x7f050011;
         public static final int no_body_sub=0x7f050007;
+        public static final int pref_hangouts=0x7f05000e;
+        public static final int pref_hangouts_summ=0x7f05000f;
         public static final int pref_multi=0x7f05000c;
         public static final int pref_multi_summ=0x7f05000d;
         public static final int pref_name_default=0x7f050009;
@@ -32,7 +35,7 @@ public final class R {
         public static final int pref_switch=0x7f05000a;
         public static final int pref_switch_summ=0x7f05000b;
         public static final int sms_body_template=0x7f050006;
-        public static final int title_settings=0x7f05000e;
+        public static final int title_settings=0x7f050010;
     }
     public static final class style {
         /** 

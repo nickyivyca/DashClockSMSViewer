@@ -14,7 +14,14 @@
     <string name="pref_switch_summ">Put message text in larger top area of panel and sender in smaller lower area</string>
     <string name="pref_multi">Take advantage of multiple extension panels</string>
     <string name="pref_multi_summ">YOU MUST ADD THE EXTRA PANELS IN DASHCLOCK OR ELSE MESSAGES WILL BE HIDDEN! Display each conversation in its own panel instead of collapsing to \'unread conversations.\' (to a max of 3 conversations)</string>
+	<string name="pref_hangouts">Use Hangouts as default SMS app</string>
+	<string name="pref_hangouts_summ">This is only really needed for when the app leads to the whole messaging app instead of a specific thread.</string>
+    
     <string name="title_settings">Settings</string>
+    
+    <string name="install_hangouts_plz">Please install Hangouts or disable it in SMS Viewe\'s settings</string>
+    
+    
     <plurals name="sms_title_template">
         <item quantity="one">%1$s unread conversation</item>
         <item quantity="other">%1$s unread conversations</item>

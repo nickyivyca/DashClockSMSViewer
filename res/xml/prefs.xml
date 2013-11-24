@@ -26,5 +26,10 @@
         android:title="@string/pref_multi"
         android:summary="@string/pref_multi_summ"
         android:defaultValue="false" />
+    <CheckBoxPreference
+    	android:key="pref_hangouts"
+    	android:title="@string/pref_hangouts"
+    	android:summary="@string/pref_hangouts_summ"
+    	android:defaultValue="false" />
 
 </PreferenceScreen>

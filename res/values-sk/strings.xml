@@ -2,7 +2,22 @@
 <resources>
     <string name="app_name">DashClock SMS Viewer</string>
     <string name="extension_title">SMS Viewer</string>
+    <string name="extension2_title">SMS Viewer - panel 2</string>
+    <string name="extension3_title">SMS Viewer - panel 3</string>
     <string name="extension_description">Zobrazí text prijatých SMS</string>
+    <string name="extrapanel_description">Zobrazí ďalšie podrobnosti o správach - viď nastavenia</string>
     <string name="sms_body_template">Od: %1$s</string>
     <string name="no_body_sub">Nová správa</string>
+    <string name="pref_name_title">Názov</string>
+    <string name="pref_name_default">Názov</string>
+    <string name="pref_switch">Prepnúť odosielateľa/obsah</string>
+    <string name="title_settings">Nastavenia</string>
+    <string name="pref_switch_summ">Vložiť text správy do väčšej hornej časti panelu a odosielateľa do menšej dolnej časti panelu</string>
+    <string name="pref_multi">Pouiť rozširujúce paneôy</string>
+    <string name="pref_multi_summ">MUSÍTE PRIDAŤ EXTRA PANELY V DASHCLOCKU, INAK BUDÚ SPRÁVY SKRYTÉ! Zobrazí každú konverzáciu v jej vlastnom paneli namiesto zobrazenia v \'neprečítaných konverzáciách.\' (až do 3 konverzácií)</string>
+    <string name="pref_hangouts">Použiť Hangouts ako predvolenú SMS aplikáciu</string>
+    <string name="pref_hangouts_summ">Toto je potrebné, len ak aplikácia otvorí celú aplikáciu na správy namiesto toho, aby otvorila určité vlákno.</string>
+    
+    
+    <string name="install_hangouts_plz">Prosím, naninštalujte Hangouts alebo ho zakážte nastaveniach SMS Viewera</string>
 </resources>

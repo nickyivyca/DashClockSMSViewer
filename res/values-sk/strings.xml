@@ -19,5 +19,5 @@
     <string name="pref_hangouts_summ">Toto je potrebné, len ak aplikácia otvorí celú aplikáciu na správy namiesto toho, aby otvorila určité vlákno.</string>
     
     
-    <string name="install_hangouts_plz">Prosím, naninštalujte Hangouts alebo ho zakážte nastaveniach SMS Viewera</string>
+    <string name="install_hangouts_plz">Prosím, nainštalujte Hangouts alebo ho zakážte nastaveniach SMS Viewera</string>
 </resources>

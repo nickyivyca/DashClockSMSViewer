@@ -28,7 +28,6 @@ import android.widget.Toast;
  */
 public class SMSViewer extends DashClockExtension {
 //    private static final String TAG = LogUtils.makeLogTag(SmsExtension.class);
-	private long messageID = 0; 
 	
 	public static final String PREF_SWITCH = "pref_switch";
 	public static final String PREF_MULTI = "pref_multi";
@@ -41,9 +40,6 @@ public class SMSViewer extends DashClockExtension {
 	
 	public static String panel2_contents = "";
 	public static String panel3_contents = "";
-	
-//	public static long panel2_threadId = 0;
-//	public static long panel3_threadId = 0;
 	
 	public static String panel2_address = "";
 	public static String panel3_address = "";
@@ -74,64 +70,52 @@ public class SMSViewer extends DashClockExtension {
         ArrayList<String> namelist = new ArrayList<String>();
         ArrayList<String> addrlist = new ArrayList<String>();
         ArrayList<Long> idlist = new ArrayList<Long>();
-        Cursor cursor = openMmsSmsCursor();
-//        long threadId = 0;
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         boolean switcher = sp.getBoolean(PREF_SWITCH, false);
         boolean multi = sp.getBoolean(PREF_MULTI, false);
         boolean hangouts = sp.getBoolean(PREF_HANGOUTS, false);
         int status = 0;
+        
+        	Cursor cursor = tryOpenSimpleThreadsCursor();
+        	if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    if (cursor.getInt(SimpleThreadsQuery.READ) == 0) {
+                        long threadId = cursor.getLong(SimpleThreadsQuery._ID);
+                        idlist.add(threadId);
 
-        while (cursor.moveToNext()) {
-            ++unreadConversations;
+                        // This is all redone (credit goes to Roman, from the base DashClock extension)
+                        // because Samsung decided to be different. Oh well.
+                        String recipientIdsStr = cursor.getString(SimpleThreadsQuery.RECIPIENT_IDS);
+                        if (!TextUtils.isEmpty(recipientIdsStr)) {
+                            String[] recipientIds = TextUtils.split(recipientIdsStr, " ");
+                            for (String recipientId : recipientIds) {
+                                Cursor canonAddrCursor = tryOpenCanonicalAddressCursorById(
+                                        Long.parseLong(recipientId));
+                                if (canonAddrCursor == null) {
+                                    continue;
+                                }
+                                if (canonAddrCursor.moveToFirst()) {
+                                    String address = canonAddrCursor.getString(
+                                            CanonicalAddressQuery.ADDRESS);
+                                    addrlist.add(address);
+                                    
+                                    String displayName = address;
+                                    displayName = getDisplayNameForContact(address);
 
-            // Get display name. SMS's are easy; MMS's not so much.
-            long id = cursor.getLong(MmsSmsQuery._ID);
-            messageID = id;
-            long contactId = cursor.getLong(MmsSmsQuery.PERSON);
-            String address = cursor.getString(MmsSmsQuery.ADDRESS);
-            
-
-            if (contactId == 0 && TextUtils.isEmpty(address) && id != 0) {
-                // Try MMS addr query
-                Cursor addrCursor = openMmsAddrCursor(id);
-                if (addrCursor.moveToFirst()) {
-                    contactId = addrCursor.getLong(MmsAddrQuery.CONTACT_ID);
-                    address = addrCursor.getString(MmsAddrQuery.ADDRESS);
-                }
-                addrCursor.close();
-            }
-
-            String displayName = address;
-            addrlist.add(address);
-
-            if (contactId > 0) {
-                Cursor contactCursor = openContactsCursorById(contactId);
-                if (contactCursor.moveToFirst()) {
-                    displayName = contactCursor.getString(RawContactsQuery.DISPLAY_NAME);
-                } else {
-                    contactId = 0;
-                }
-                contactCursor.close();
-            }
-
-            if (contactId <= 0) {
-                Cursor contactCursor = tryOpenContactsCursorByAddress(address);
-                if (contactCursor != null) {
-                    if (contactCursor.moveToFirst()) {
-                        displayName = contactCursor.getString(ContactsQuery.DISPLAY_NAME);
+                                    if (names.length() > 0) {
+                                        names.append(", ");
+                                    }
+                                    names.append(displayName);
+                                    namelist.add(displayName);
+                                }
+                                canonAddrCursor.close();
+                            }
+                        }
                     }
-                    contactCursor.close();
                 }
-            }
-
-            if (names.length() > 0) {
-                names.append(", ");
-            }
-            names.append(displayName);
-            namelist.add(displayName);
         }
-        cursor.close();
+        
+        unreadConversations = namelist.size();
 
         /*Intent for Panel 1
          * If multipanel enabled:
@@ -222,43 +206,52 @@ public class SMSViewer extends DashClockExtension {
                 .clickIntent(clickIntent));
     	   
     }
+        private String getDisplayNameForContact(String address) {
+            String displayName = address;
+                Cursor contactCursor = tryOpenContactsCursorByAddress(address);
+                if (contactCursor != null) {
+                    if (contactCursor.moveToFirst()) {
+                        displayName = contactCursor.getString(ContactsQuery.DISPLAY_NAME);
+                    }
+                    contactCursor.close();
+                }
+//            }
 
+            return displayName;
+        }
+    
+    private Cursor tryOpenSimpleThreadsCursor() {
+        try {
+            return getContentResolver().query(
+                    TelephonyProviderConstants.Threads.CONTENT_URI
+                            .buildUpon()
+                            .appendQueryParameter("simple", "true")
+                            .build(),
+                    SimpleThreadsQuery.PROJECTION,
+                    null,
+                    null,
+                    null);
 
-    private Cursor openMmsSmsCursor() {
-        return getContentResolver().query(
-                TelephonyProviderConstants.MmsSms.CONTENT_CONVERSATIONS_URI,
-                MmsSmsQuery.PROJECTION,
-                TelephonyProviderConstants.Mms.READ + "=0 AND "
-                        + TelephonyProviderConstants.Mms.THREAD_ID + "!=0 AND ("
-                        + TelephonyProviderConstants.Mms.MESSAGE_BOX + "="
-                        + TelephonyProviderConstants.Mms.MESSAGE_BOX_INBOX + " OR "
-                        + TelephonyProviderConstants.Sms.TYPE + "="
-                        + TelephonyProviderConstants.Sms.MESSAGE_TYPE_INBOX + ")",
-                null,
-                null);
+        } catch (Exception e) {
+//            LOGW(TAG, "Error accessing simple SMS threads cursor", e);
+            return null;
+        }
     }
+    
+    private Cursor tryOpenCanonicalAddressCursorById(long id) {
+        try {
+            return getContentResolver().query(
+                    TelephonyProviderConstants.CanonicalAddresses.CONTENT_URI.buildUpon()
+                            .build(),
+                    CanonicalAddressQuery.PROJECTION,
+                    TelephonyProviderConstants.CanonicalAddresses._ID + "=?",
+                    new String[]{Long.toString(id)},
+                    null);
 
-    private Cursor openMmsAddrCursor(long mmsMsgId) {
-        return getContentResolver().query(
-                TelephonyProviderConstants.Mms.CONTENT_URI.buildUpon()
-                        .appendPath(Long.toString(mmsMsgId))
-                        .appendPath("addr")
-                        .build(),
-                MmsAddrQuery.PROJECTION,
-                TelephonyProviderConstants.Mms.Addr.MSG_ID + "=?",
-                new String[]{Long.toString(mmsMsgId)},
-                null);
-    }
-
-    private Cursor openContactsCursorById(long contactId) {
-        return getContentResolver().query(
-                ContactsContract.RawContacts.CONTENT_URI.buildUpon()
-                        .appendPath(Long.toString(contactId))
-                        .build(),
-                RawContactsQuery.PROJECTION,
-                null,
-                null,
-                null);
+        } catch (Exception e) {
+//            LOGE(TAG, "Error accessing canonical addresses cursor", e);
+            return null;
+        }
     }
 
     private Cursor tryOpenContactsCursorByAddress(String phoneNumber) {
@@ -279,36 +272,26 @@ public class SMSViewer extends DashClockExtension {
         }
     }
 
-    private interface MmsSmsQuery {
+    private interface SimpleThreadsQuery {
         String[] PROJECTION = {
-                TelephonyProviderConstants.Sms._ID,
-                TelephonyProviderConstants.Sms.ADDRESS,
-                TelephonyProviderConstants.Sms.PERSON,
-                TelephonyProviderConstants.Sms.THREAD_ID,
+                TelephonyProviderConstants.Threads._ID,
+                TelephonyProviderConstants.Threads.READ,
+                TelephonyProviderConstants.Threads.RECIPIENT_IDS,
+        };
+
+        int _ID = 0;
+        int READ = 1;
+        int RECIPIENT_IDS = 2;
+    }
+
+    private interface CanonicalAddressQuery {
+        String[] PROJECTION = {
+                TelephonyProviderConstants.CanonicalAddresses._ID,
+                TelephonyProviderConstants.CanonicalAddresses.ADDRESS,
         };
 
         int _ID = 0;
         int ADDRESS = 1;
-        int PERSON = 2;
-        int THREAD_ID = 3;
-    }
-
-    private interface MmsAddrQuery {
-        String[] PROJECTION = {
-                TelephonyProviderConstants.Mms.Addr.ADDRESS,
-                TelephonyProviderConstants.Mms.Addr.CONTACT_ID,
-        };
-
-        int ADDRESS = 0;
-        int CONTACT_ID = 1;
-    }
-
-    private interface RawContactsQuery {
-        String[] PROJECTION = {
-                ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY,
-        };
-
-        int DISPLAY_NAME = 0;
     }
 
     private interface ContactsQuery {
@@ -317,51 +300,6 @@ public class SMSViewer extends DashClockExtension {
         };
 
         int DISPLAY_NAME = 0;
-    }
-    
-    public String getMessageText(long messageId){
-    	//BIG thanks to ShortFuse!
-        String[] selectColumns = new String[] { "body" };
-        Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), 
-            selectColumns, "_id=?", new String[] { String.valueOf(messageId) }, null);
-        if (cursor == null)
-            return null; //handle this outside with default text        
-        if (!cursor.moveToFirst())
-        {
-            cursor.close();
-            return null;
-        }
-        String body = cursor.getString(0); //we only passed one column so it'll always be 0;
-        cursor.close();
-        return body;
-    }
-    
-    //Testing for grabbing text when more than one unread message
-    //
-    public String getMessageText(){
-    	Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), new String[] { "body" } , "read = 0", null, null);
-    	if (cursor == null){
-    		return null;
-    	}
-        if (!cursor.moveToFirst())
-        {
-            cursor.close();
-            return null;
-        }
-        cursor.moveToLast();
-        String body = "";
-        int numproc = 0;
-        while(numproc != cursor.getCount()){
-        	if (numproc == 0)
-        		body = body + cursor.getString(cursor.getColumnIndexOrThrow("body"));
-        	else
-            	body = body + "\n" + cursor.getString(cursor.getColumnIndexOrThrow("body"));
-        	numproc++;
-        	cursor.moveToPrevious();
-        }
-        cursor.close();
-    	
-    	return body;
     }
 
     //For when multiple contacts exist and you want to get messages from only one

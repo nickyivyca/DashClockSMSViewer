@@ -10,7 +10,6 @@ import android.net.Uri;
 
 import com.google.android.apps.dashclock.api.DashClockExtension;
 import com.google.android.apps.dashclock.api.ExtensionData;
-
 import com.nickivy.dashclocksmsviewer.R;
 
 import android.database.Cursor;
@@ -301,9 +300,16 @@ public class SMSViewer extends DashClockExtension {
 
         int DISPLAY_NAME = 0;
     }
+    
+    private String procAddr(String in){
+    	in = in.replaceAll("\\s","");
+    	in = in.replaceAll("-","");
+    	return in;
+    }
 
     //For when multiple contacts exist and you want to get messages from only one
     public String getMessageText(String addr, int num){
+    	addr = procAddr(addr);
     	Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), new String[] { "address","body", } , "read = 0", null, null);
     	if (cursor == null){
     		return null;
@@ -330,6 +336,7 @@ public class SMSViewer extends DashClockExtension {
         }
         cursor.close();
     	
+        
     	return body;
     }
 }

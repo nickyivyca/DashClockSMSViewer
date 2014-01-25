@@ -94,8 +94,8 @@ public class SMSViewer extends DashClockExtension {
                                     continue;
                                 }
                                 if (canonAddrCursor.moveToFirst()) {
-                                    String address = canonAddrCursor.getString(
-                                            CanonicalAddressQuery.ADDRESS);
+                                    String address = procAddr(canonAddrCursor.getString(
+                                            CanonicalAddressQuery.ADDRESS));
                                     addrlist.add(address);
                                     
                                     String displayName = address;
@@ -112,6 +112,7 @@ public class SMSViewer extends DashClockExtension {
                         }
                     }
                 }
+                cursor.close();
         }
         
         unreadConversations = namelist.size();
@@ -304,6 +305,8 @@ public class SMSViewer extends DashClockExtension {
     private String procAddr(String in){
     	in = in.replaceAll("\\s","");
     	in = in.replaceAll("-","");
+    	in = in.replaceAll("\\(","");
+    	in = in.replaceAll("\\)","");
     	return in;
     }
 
@@ -324,7 +327,7 @@ public class SMSViewer extends DashClockExtension {
         int numproc = 0;
         nummsg[num] = 0;
         while(numproc != cursor.getCount()){
-        	if(cursor.getString(cursor.getColumnIndexOrThrow("address")).equals(addr)){
+        	if(cursor.getString(cursor.getColumnIndexOrThrow("address")).contains(addr)){
         		if (body.equals(""))
         			body = body + cursor.getString(cursor.getColumnIndexOrThrow("body"));
         		else
